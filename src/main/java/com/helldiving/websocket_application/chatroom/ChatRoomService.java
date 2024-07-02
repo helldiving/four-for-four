@@ -28,10 +28,11 @@ public class ChatRoomService {
                     return  Optional.empty();
                 });
     }
-
+   // Creates a unique chat ID by combining sender and recipient IDs. Format is like paulatreides_fridgeisawesome if paul is the sender and fridge is recipient.
     private String createChatId(String senderId, String recipientId) {
-        var chatId = String.format("%s_%s", senderId, recipientId); // format is like paul paulatreides
+        var chatId = String.format("%s_%s", senderId, recipientId); 
 
+        // Creates two ChatRoom objects, one for each direction of communication and allows easy retrieval of chat history no matter who started the chat
         ChatRoom senderRecipient = ChatRoom
                 .builder()
                 .chatId(chatId)

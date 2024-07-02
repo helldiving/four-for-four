@@ -20,7 +20,9 @@ public class ChatController {
 
     @MessageMapping("/chat")
     public void processMessage(@Payload ChatMessage chatMessage) {
+        // Save incoming message to database
         ChatMessage savedMsg = chatMessageService.save(chatMessage);
+        // Send the message to the specific user's queue
         messagingTemplate.convertAndSendToUser(
                 chatMessage.getRecipientId(), "/queue/messages",
                 new ChatNotification(

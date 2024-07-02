@@ -25,6 +25,10 @@ public class ChatMessageService {
         return chatMessage;
     }
 
+    // Retrieve chat messages between two users
+    // If no chat room exists, return an empty list
+    // Allows better handling of new conversations
+
     public List<ChatMessage> findChatMessages(String senderId, String recipientId) {
         var chatId = chatRoomService.getChatRoomId(senderId, recipientId, false);
         return chatId.map(repository::findByChatId).orElse(new ArrayList<>());
