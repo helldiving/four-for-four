@@ -1,15 +1,11 @@
 package com.helldiving.websocket_application.chat;
 
 import com.helldiving.websocket_application.chatroom.ChatRoomService;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,9 +33,10 @@ class ChatMessageServiceTest {
     @Test
     void save_ShouldSaveMessage_WhenValidMessage() {
         // Arrange
-        ChatMessage message = new ChatMessage();
-        message.setSenderId("sender");
-        message.setRecipientId("recipient");
+        ChatMessage message = ChatMessage.builder()
+                .senderId("sender")
+                .recipientId("recipient")
+                .build();
         when(chatRoomService.getChatRoomId(anyString(), anyString(), anyBoolean())).thenReturn(Optional.of("chatId"));
         when(repository.save(any(ChatMessage.class))).thenReturn(message);
 

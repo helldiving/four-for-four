@@ -5,14 +5,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
-import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import java.security.Principal;
 import java.util.List;
 
-@Controller
+@RestController
 @RequiredArgsConstructor
 public class ChatController {
 
@@ -29,24 +29,15 @@ public class ChatController {
 
     @MessageMapping("/chat")
     public void processMessage(@Payload ChatMessage chatMessage, Principal principal) {
-        String senderId = principal.getName();
+        String senderId = (principal != null) ? principal.getName() : chatMessage.getSenderId();
         ChatMessage savedMsg = chatMessageService.save(chatMessage);
         
-        ChatNotification notification = new ChatNotification(
-            savedMsg.getId(),
-            senderId,
-            chatMessage.getRecipientId(),
-            savedMsg.getContent()
-        );
+        System.out.println("Processing message: " + savedMsg);
 
-        if (chatMessage.getRecipientId() != null) {
-            // Direct message
-            messagingTemplate.convertAndSendToUser(
-                chatMessage.getRecipientId(), "/queue/messages", notification
-            );
-        } else {
-            // Group message
-            messagingTemplate.convertAndSend("/topic/messages", savedMsg);
-        }
+        messagingTemplate.convertAndSendToUser(
+            chatMessage.getRecipientId(),
+            "/queue/messages",
+            savedMsg
+        );
     }
 }

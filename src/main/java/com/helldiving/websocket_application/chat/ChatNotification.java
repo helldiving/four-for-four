@@ -1,17 +1,12 @@
 package com.helldiving.websocket_application.chat;
 
 import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@Getter
-@Setter
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
-
 public class ChatNotification {
     private String id;
     private String senderId;
