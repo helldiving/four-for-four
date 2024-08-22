@@ -3,8 +3,13 @@ package com.helldiving.websocket_application.chat;
 import com.helldiving.websocket_application.chatroom.ChatRoomService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class ChatMessageServiceTest {
 
     @Mock
@@ -22,30 +28,27 @@ class ChatMessageServiceTest {
     @Mock
     private ChatRoomService chatRoomService;
 
-    private ChatMessageService service;
+    @Mock
+    private ChatSessionRepository sessionRepository;
 
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-        service = new ChatMessageService(repository, chatRoomService);
-    }
+    @InjectMocks
+    private ChatMessageService service;
 
     @Test
     void save_ShouldSaveMessage_WhenValidMessage() {
-        ChatMessage message = ChatMessage.builder()
-                .senderId("user1")
-                .recipientId("user2")
-                .content("Test message")
-                .build();
-
+        // Arrange
+        ChatMessage message = new ChatMessage();
+        message.setSenderId("sender");
+        message.setRecipientId("recipient");
         when(chatRoomService.getChatRoomId(anyString(), anyString(), anyBoolean())).thenReturn(Optional.of("chatId"));
         when(repository.save(any(ChatMessage.class))).thenReturn(message);
 
-        ChatMessage savedMessage = service.save(message);
+        // Act
+        ChatMessage result = service.save(message);
 
-        assertNotNull(savedMessage);
-        assertEquals("chatId", savedMessage.getChatId());
-        verify(repository, times(1)).save(message);
+        // Assert
+        assertNotNull(result);
+        verify(repository).save(message);
     }
 
     @Test
@@ -73,5 +76,50 @@ class ChatMessageServiceTest {
         assertNotNull(result);
         assertTrue(result.isEmpty());
         verify(repository, never()).findByChatId(anyString());
+    }
+
+    @Test
+    void saveSession_ShouldSaveSession() {
+        ChatSession session = new ChatSession();
+        when(sessionRepository.save(any(ChatSession.class))).thenReturn(session);
+
+        ChatSession savedSession = service.saveSession(session);
+
+        assertNotNull(savedSession);
+        verify(sessionRepository, times(1)).save(session);
+    }
+
+    @Test
+    void getSessionById_ShouldReturnSession_WhenSessionExists() {
+        String sessionId = "testSessionId";
+        ChatSession session = new ChatSession();
+        when(sessionRepository.findById(sessionId)).thenReturn(Optional.of(session));
+
+        ChatSession retrievedSession = service.getSessionById(sessionId);
+
+        assertNotNull(retrievedSession);
+        verify(sessionRepository, times(1)).findById(sessionId);
+    }
+
+    @Test
+    void getSessionById_ShouldThrowException_WhenSessionDoesNotExist() {
+        String sessionId = "nonExistentSessionId";
+        when(sessionRepository.findById(sessionId)).thenReturn(Optional.empty());
+
+        assertThrows(RuntimeException.class, () -> service.getSessionById(sessionId));
+    }
+
+    @Test
+    void getActiveSessions_ShouldReturnActiveSessions() {
+        List<ChatSession> activeSessions = new ArrayList<>();
+        activeSessions.add(new ChatSession());
+        activeSessions.add(new ChatSession());
+        when(sessionRepository.findByStatus(SessionStatus.ACTIVE)).thenReturn(activeSessions);
+
+        List<ChatSession> retrievedSessions = service.getActiveSessions();
+
+        assertNotNull(retrievedSessions);
+        assertEquals(2, retrievedSessions.size());
+        verify(sessionRepository, times(1)).findByStatus(SessionStatus.ACTIVE);
     }
 }

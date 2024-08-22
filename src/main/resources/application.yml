@@ -1,7 +1,22 @@
+# for using localhost mongo
+
 spring:
+  devtools:
+    restart:
+      enabled: true
+    livereload:
+      enabled: true
   data:
     mongodb:
-      uri: mongodb://helldiving:password@mongodb:27017/chat_app?authSource=admin
+      uri: mongodb://helldiving:password@localhost:27017/chat_app?authSource=admin
 
 server:
   port: 8088
+# for using docker:
+# spring:
+#   data:
+#     mongodb:
+#       uri: mongodb://helldiving:password@mongodb:27017/chat_app?authSource=admin
+
+# server:
+#   port: 8088

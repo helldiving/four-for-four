@@ -10,6 +10,11 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: helldiving
       MONGO_INITDB_ROOT_PASSWORD: password
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   mongo-express:
     image: mongo-express
@@ -32,7 +37,8 @@ services:
     ports:
       - "8088:8088"
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_healthy
 
 volumes:
   mongodb_data:

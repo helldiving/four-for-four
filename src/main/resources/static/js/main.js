@@ -36,18 +36,27 @@ function connect(event) {
 // Callback function when the user is connected (Websocket connection is established)
 function onConnected() {
   stompClient.subscribe(`/user/${nickname}/queue/messages`, onMessageReceived);
-  stompClient.subscribe(`/user/public`, onMessageReceived);
+  stompClient.subscribe(`/topic/messages`, onGroupMessageReceived);
+  stompClient.subscribe(`/topic/sessions`, onSessionUpdate);
 
-  // Register the connected user
   stompClient.send(
     "/app/user.addUser",
     {},
-    // Json.stringify() converts a JavaScript object to a JSON string
     JSON.stringify({ nickName: nickname, fullName: fullname, status: "ONLINE" })
   );
-  // Display the connected user's fullname
+
   document.querySelector("#connected-user-fullname").textContent = fullname;
   findAndDisplayConnectedUsers().then();
+}
+
+function onGroupMessageReceived(payload) {
+  const message = JSON.parse(payload.body);
+  displayMessage(message.senderId, message.content);
+}
+
+function onSessionUpdate(payload) {
+  const session = JSON.parse(payload.body);
+  // Handle session updates (e.g., display session info, start/end timers)
 }
 // Function to fetch and display list of connected users asynchronously (async because using await)
 async function findAndDisplayConnectedUsers() {

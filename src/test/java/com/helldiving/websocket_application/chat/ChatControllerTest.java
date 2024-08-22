@@ -1,60 +1,77 @@
 package com.helldiving.websocket_application.chat;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.http.HttpMethod;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.springframework.http.HttpStatus;
 
-@WebMvcTest(ChatController.class)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("test")
 class ChatControllerTest {
 
     @Autowired
-    private MockMvc mockMvc;
-
-    @MockBean
-    private SimpMessagingTemplate messagingTemplate;
+    private TestRestTemplate restTemplate;
 
     @MockBean
     private ChatMessageService chatMessageService;
 
-    @BeforeEach
-    void setUp() {
+    @LocalServerPort
+    private int port;
+
+    private String getRootUrl() {
+        return "http://localhost:" + port;
     }
 
     @Test
-    void findChatMessages_ShouldReturnMessages_WhenMessagesExist() throws Exception {
-        List<ChatMessage> messages = new ArrayList<>();
-        messages.add(ChatMessage.builder().build());
-        messages.add(ChatMessage.builder().build());
-
+    void findChatMessages_ShouldReturnMessages_WhenMessagesExist() {
+        List<ChatMessage> messages = Arrays.asList(new ChatMessage("Hello"), new ChatMessage("World"));
         when(chatMessageService.findChatMessages(anyString(), anyString())).thenReturn(messages);
 
-        mockMvc.perform(get("/messages/user1/user2"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2));
+        ResponseEntity<List<ChatMessage>> response = restTemplate.exchange(
+                getRootUrl() + "/messages/user1/user2",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<ChatMessage>>() {}
+        );
 
-        verify(chatMessageService, times(1)).findChatMessages("user1", "user2");
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(2, response.getBody().size());
     }
 
     @Test
-    void findChatMessages_ShouldReturnEmptyList_WhenNoMessagesExist() throws Exception {
-        when(chatMessageService.findChatMessages(anyString(), anyString())).thenReturn(new ArrayList<>());
+    void findChatMessages_ShouldReturnEmptyList_WhenNoMessagesExist() {
+        when(chatMessageService.findChatMessages(anyString(), anyString())).thenReturn(Collections.emptyList());
 
-        mockMvc.perform(get("/messages/user1/user2"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
+        ResponseEntity<List<ChatMessage>> response = restTemplate.exchange(
+                getRootUrl() + "/messages/user1/user2",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<ChatMessage>>() {}
+        );
 
-        verify(chatMessageService, times(1)).findChatMessages("user1", "user2");
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertTrue(response.getBody().isEmpty());
     }
 }

@@ -1,0 +1,7 @@
+spring:
+  data:
+    mongodb:
+      uri: mongodb://helldiving:password@localhost:27017/testdb?authSource=admin
+  test:
+    database:
+      replace: none

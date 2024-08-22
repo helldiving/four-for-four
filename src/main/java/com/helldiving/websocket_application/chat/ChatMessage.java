@@ -1,6 +1,6 @@
 package com.helldiving.websocket_application.chat;
 
-import java.sql.Date;
+import java.time.LocalDateTime;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -17,9 +17,6 @@ import lombok.Setter;
 @NoArgsConstructor
 @Builder
 @Document
-
-
-
 public class ChatMessage {
     @Id
     private String id;
@@ -27,5 +24,10 @@ public class ChatMessage {
     private String senderId;
     private String recipientId;
     private String content;
-    private Date timestamp;
+    private LocalDateTime timestamp;
+
+    public ChatMessage(String content) {
+        this.content = content;
+        this.timestamp = LocalDateTime.now();
+    }
 }
